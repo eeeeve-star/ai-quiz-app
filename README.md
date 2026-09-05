@@ -10,7 +10,8 @@
 
 이 앱의 퀴즈 생성 기능은 **Claude 아티팩트로 열었을 때만** 동작합니다(`window.claude`가 Claude 뷰어 안에서만 제공되기 때문). 아래 링크로 열어 사용하세요.
 
-- 실행 링크: (Claude 아티팩트 게시 링크를 여기에 추가하세요)
+- 실행 링크(AI 퀴즈 생성 동작): https://claude.ai/code/artifact/b23b1b11-35a9-4d03-b54e-e41fb7ee13ca
+- GitHub Pages(정적 미리보기, AI 생성 비활성): https://eeeeve-star.github.io/ai-quiz-app/
 
 `index.html`을 GitHub Pages 등 일반 정적 호스팅으로 열면 화면 UI는 보이지만, 퀴즈 생성 버튼은 "이 페이지에서 AI 퀴즈 생성을 사용할 수 없어요" 안내와 함께 비활성화됩니다.
 
