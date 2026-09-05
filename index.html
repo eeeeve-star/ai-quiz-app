@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI 객관식 퀴즈</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f2efe6;
+    --surface:#fffdf8;
+    --surface-muted:#eae5d6;
+    --ink:#242019;
+    --ink-muted:#726b5a;
+    --border:#dcd4bd;
+    --accent:#2f5d50;
+    --accent-strong:#1f4137;
+    --accent-soft:#dfe9e3;
+    --correct:#2f7a4f;
+    --correct-soft:#e1f2e6;
+    --wrong:#b3402f;
+    --wrong-soft:#f8e4df;
+    --easy:#3a8a5b;
+    --medium:#b8862e;
+    --hard:#b3402f;
+    --shadow:0 14px 34px rgba(36,32,25,0.14);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#15130f;
+      --surface:#211e17;
+      --surface-muted:#2a261d;
+      --ink:#ece7da;
+      --ink-muted:#a39a84;
+      --border:#3a3527;
+      --accent:#7fbfa4;
+      --accent-strong:#9bd4bb;
+      --accent-soft:#243530;
+      --correct:#7fc999;
+      --correct-soft:#1e3226;
+      --wrong:#e2897a;
+      --wrong-soft:#3a231e;
+      --easy:#7fc999;
+      --medium:#e0b45f;
+      --hard:#e2897a;
+      --shadow:0 14px 34px rgba(0,0,0,0.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#15130f;
+    --surface:#211e17;
+    --surface-muted:#2a261d;
+    --ink:#ece7da;
+    --ink-muted:#a39a84;
+    --border:#3a3527;
+    --accent:#7fbfa4;
+    --accent-strong:#9bd4bb;
+    --accent-soft:#243530;
+    --correct:#7fc999;
+    --correct-soft:#1e3226;
+    --wrong:#e2897a;
+    --wrong-soft:#3a231e;
+    --easy:#7fc999;
+    --medium:#e0b45f;
+    --hard:#e2897a;
+    --shadow:0 14px 34px rgba(0,0,0,0.45);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Sans KR", -apple-system, "Malgun Gothic", sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:32px 16px 48px;
+  }
+  .app{ width:100%; max-width:440px; }
+  .brand{ text-align:center; margin-bottom:18px; }
+  .brand h1{
+    font-family:"Song Myung", serif;
+    font-size:26px;
+    font-weight:400;
+    margin:0 0 6px;
+    letter-spacing:0.01em;
+    text-wrap:balance;
+  }
+  .brand p{ margin:0; color:var(--ink-muted); font-size:14px; }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:18px;
+    box-shadow:var(--shadow);
+    padding:26px 22px 24px;
+  }
+  .screen[hidden]{ display:none; }
+
+  .field-label{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    color:var(--ink-muted);
+    letter-spacing:0.03em;
+    margin-bottom:8px;
+  }
+  .topic-input{
+    width:100%;
+    padding:13px 14px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--surface-muted);
+    color:var(--ink);
+    font-family:inherit;
+    font-size:15px;
+    outline:none;
+  }
+  .topic-input:focus{ border-color:var(--accent); }
+
+  .diff-group{ display:flex; gap:8px; margin-top:18px; }
+  .diff-btn{
+    flex:1;
+    padding:11px 0;
+    border-radius:10px;
+    border:1.5px solid var(--border);
+    background:var(--surface-muted);
+    color:var(--ink-muted);
+    font-family:inherit;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .diff-btn[data-level="쉬움"][data-selected="true"]{ border-color:var(--easy); color:var(--easy); background:color-mix(in srgb, var(--easy) 14%, var(--surface)); }
+  .diff-btn[data-level="보통"][data-selected="true"]{ border-color:var(--medium); color:var(--medium); background:color-mix(in srgb, var(--medium) 14%, var(--surface)); }
+  .diff-btn[data-level="어려움"][data-selected="true"]{ border-color:var(--hard); color:var(--hard); background:color-mix(in srgb, var(--hard) 14%, var(--surface)); }
+
+  .primary-btn{
+    width:100%;
+    margin-top:22px;
+    padding:14px 0;
+    border:none;
+    border-radius:12px;
+    background:var(--accent);
+    color:var(--surface);
+    font-family:inherit;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .primary-btn:disabled{ background:var(--border); color:var(--ink-muted); cursor:not-allowed; }
+  .primary-btn:not(:disabled):active{ background:var(--accent-strong); }
+
+  .secondary-btn{
+    width:100%;
+    margin-top:10px;
+    padding:12px 0;
+    border:1.5px solid var(--border);
+    border-radius:12px;
+    background:transparent;
+    color:var(--ink);
+    font-family:inherit;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .text-link{
+    display:block;
+    width:100%;
+    margin-top:14px;
+    padding:0;
+    border:none;
+    background:none;
+    color:var(--ink-muted);
+    font-family:inherit;
+    font-size:13px;
+    text-align:center;
+    text-decoration:underline;
+    cursor:pointer;
+  }
+
+  .notice{
+    border-radius:10px;
+    padding:11px 13px;
+    font-size:13px;
+    line-height:1.5;
+    margin-bottom:16px;
+  }
+  .notice.warn{ background:var(--wrong-soft); color:var(--wrong); }
+  .notice.info{ background:var(--accent-soft); color:var(--accent-strong); }
+
+  /* loading */
+  .loading-wrap{ text-align:center; padding:20px 4px 6px; }
+  .spinner{
+    width:38px; height:38px; margin:0 auto 18px;
+    border:3px solid var(--surface-muted);
+    border-top-color:var(--accent);
+    border-radius:50%;
+    animation:spin 0.9s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce){ .spinner{ animation-duration:2.4s; } }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .loading-wrap h2{ font-size:17px; font-weight:700; margin:0 0 6px; }
+  .loading-wrap p{ color:var(--ink-muted); font-size:14px; margin:0 0 18px; }
+
+  /* quiz */
+  .progress-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .progress-count{ font-size:13px; font-weight:700; color:var(--ink-muted); font-variant-numeric:tabular-nums; }
+  .dots{ display:flex; gap:6px; }
+  .dot{ width:7px; height:7px; border-radius:50%; background:var(--border); }
+  .dot[data-state="current"]{ background:var(--accent); transform:scale(1.3); }
+  .dot[data-state="done"]{ background:var(--accent); }
+
+  .question-text{
+    font-size:17px;
+    font-weight:700;
+    line-height:1.5;
+    margin:0 0 18px;
+    text-wrap:balance;
+  }
+  .options{ display:flex; flex-direction:column; gap:9px; }
+  .option-btn{
+    text-align:left;
+    padding:13px 14px;
+    border-radius:11px;
+    border:1.5px solid var(--border);
+    background:var(--surface-muted);
+    color:var(--ink);
+    font-family:inherit;
+    font-size:14.5px;
+    line-height:1.4;
+    cursor:pointer;
+  }
+  .option-btn:not(:disabled):active{ border-color:var(--accent); }
+  .option-btn:disabled{ cursor:default; }
+  .option-btn[data-mark="correct"]{ border-color:var(--correct); background:var(--correct-soft); color:var(--correct); font-weight:700; }
+  .option-btn[data-mark="wrong"]{ border-color:var(--wrong); background:var(--wrong-soft); color:var(--wrong); font-weight:700; }
+
+  .explain-box{
+    margin-top:16px;
+    padding:12px 13px;
+    border-radius:11px;
+    background:var(--surface-muted);
+    font-size:13.5px;
+    line-height:1.55;
+  }
+  .explain-tag{
+    display:inline-block;
+    font-weight:700;
+    font-size:12.5px;
+    margin-right:6px;
+  }
+  .explain-tag[data-mark="correct"]{ color:var(--correct); }
+  .explain-tag[data-mark="wrong"]{ color:var(--wrong); }
+  .next-btn{ margin-top:18px; }
+
+  /* result */
+  .score-wrap{ text-align:center; padding:6px 0 4px; }
+  .topic-line{ font-size:13px; color:var(--ink-muted); margin:0 0 4px; }
+  .score-num{ font-family:"Song Myung", serif; font-size:44px; margin:0; font-variant-numeric:tabular-nums; }
+  .score-num span{ font-size:20px; color:var(--ink-muted); }
+  .score-label{ margin:2px 0 0; font-weight:700; color:var(--accent-strong); }
+
+  .review-list{ margin-top:20px; display:flex; flex-direction:column; gap:10px; }
+  .review-item{
+    border:1px solid var(--border);
+    border-radius:11px;
+    padding:11px 13px;
+    background:var(--surface-muted);
+  }
+  .review-head{ display:flex; gap:8px; align-items:baseline; margin-bottom:4px; }
+  .review-mark{ font-weight:700; font-size:13px; flex:none; }
+  .review-mark[data-mark="correct"]{ color:var(--correct); }
+  .review-mark[data-mark="wrong"]{ color:var(--wrong); }
+  .review-q{ font-size:13.5px; font-weight:700; line-height:1.4; }
+  .review-explain{ font-size:12.5px; color:var(--ink-muted); line-height:1.5; margin:0; }
+
+  .cancel-row{ margin-top:8px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="brand">
+    <h1>AI 객관식 퀴즈</h1>
+    <p>주제와 난이도를 정하면 문제 5개를 즉석에서 만들어 드려요</p>
+  </div>
+
+  <div class="card">
+
+    <!-- 1) 입력 화면 -->
+    <section id="screen-start" class="screen">
+      <div id="notice-start" class="notice warn" hidden></div>
+
+      <label class="field-label" for="topic-input">주제</label>
+      <input id="topic-input" class="topic-input" type="text" placeholder="예: 광합성, 조선 후기 실학, 관용어" maxlength="60" autocomplete="off">
+
+      <label class="field-label" style="margin-top:18px;">난이도</label>
+      <div class="diff-group" id="diff-group">
+        <button type="button" class="diff-btn" data-level="쉬움">쉬움</button>
+        <button type="button" class="diff-btn" data-level="보통" data-selected="true">보통</button>
+        <button type="button" class="diff-btn" data-level="어려움">어려움</button>
+      </div>
+
+      <button type="button" id="gen-btn" class="primary-btn" disabled>준비 중...</button>
+    </section>
+
+    <!-- 2) 로딩 화면 -->
+    <section id="screen-loading" class="screen" hidden>
+      <div class="loading-wrap">
+        <div class="spinner"></div>
+        <h2>문제를 만드는 중이에요</h2>
+        <p id="loading-topic"></p>
+      </div>
+      <div class="cancel-row">
+        <button type="button" id="cancel-btn" class="text-link">취소</button>
+      </div>
+    </section>
+
+    <!-- 3) 퀴즈 풀이 화면 -->
+    <section id="screen-quiz" class="screen" hidden>
+      <div class="progress-row">
+        <span class="progress-count" id="progress-count">문항 1/5</span>
+        <div class="dots" id="dots"></div>
+      </div>
+      <p class="question-text" id="question-text"></p>
+      <div class="options" id="options"></div>
+      <div class="explain-box" id="explain-box" hidden>
+        <span class="explain-tag" id="explain-tag"></span>
+        <span id="explain-text"></span>
+      </div>
+      <button type="button" id="next-btn" class="primary-btn next-btn" hidden>다음 문제</button>
+    </section>
+
+    <!-- 4) 결과 화면 -->
+    <section id="screen-result" class="screen" hidden>
+      <div class="score-wrap">
+        <p class="topic-line" id="result-topic"></p>
+        <p class="score-num"><span id="score-num">0</span><span>/5</span></p>
+        <p class="score-label" id="score-label"></p>
+      </div>
+      <div class="review-list" id="review-list"></div>
+      <button type="button" id="retry-btn" class="primary-btn">다시 풀기</button>
+      <button type="button" id="new-topic-btn" class="text-link">새 주제로 시작하기</button>
+    </section>
+
+    <!-- 5) 오류 화면 -->
+    <section id="screen-error" class="screen" hidden>
+      <div class="notice warn" id="error-message"></div>
+      <button type="button" id="error-retry-btn" class="primary-btn">다시 시도</button>
+      <button type="button" id="error-back-btn" class="text-link">처음으로</button>
+    </section>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var screens = {
+    start: document.getElementById('screen-start'),
+    loading: document.getElementById('screen-loading'),
+    quiz: document.getElementById('screen-quiz'),
+    result: document.getElementById('screen-result'),
+    error: document.getElementById('screen-error')
+  };
+  function showScreen(name){
+    for (var k in screens) screens[k].hidden = (k !== name);
+  }
+
+  var noticeStart = document.getElementById('notice-start');
+  var topicInput = document.getElementById('topic-input');
+  var diffGroup = document.getElementById('diff-group');
+  var genBtn = document.getElementById('gen-btn');
+  var loadingTopic = document.getElementById('loading-topic');
+  var cancelBtn = document.getElementById('cancel-btn');
+
+  var progressCount = document.getElementById('progress-count');
+  var dotsWrap = document.getElementById('dots');
+  var questionText = document.getElementById('question-text');
+  var optionsWrap = document.getElementById('options');
+  var explainBox = document.getElementById('explain-box');
+  var explainTag = document.getElementById('explain-tag');
+  var explainText = document.getElementById('explain-text');
+  var nextBtn = document.getElementById('next-btn');
+
+  var resultTopic = document.getElementById('result-topic');
+  var scoreNum = document.getElementById('score-num');
+  var scoreLabel = document.getElementById('score-label');
+  var reviewList = document.getElementById('review-list');
+  var retryBtn = document.getElementById('retry-btn');
+  var newTopicBtn = document.getElementById('new-topic-btn');
+
+  var errorMessage = document.getElementById('error-message');
+  var errorRetryBtn = document.getElementById('error-retry-btn');
+  var errorBackBtn = document.getElementById('error-back-btn');
+
+  var sampleFn = null;
+  var currentDifficulty = '보통';
+  var currentTopic = '';
+  var questions = [];
+  var answers = [];
+  var currentIndex = 0;
+  var score = 0;
+  var abortCtl = null;
+
+  // --- 난이도 선택 ---
+  diffGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    Array.prototype.forEach.call(diffGroup.children, function(b){ b.removeAttribute('data-selected'); });
+    btn.setAttribute('data-selected', 'true');
+    currentDifficulty = btn.getAttribute('data-level');
+  });
+
+  topicInput.addEventListener('input', refreshGenButton);
+
+  function refreshGenButton(){
+    if (!sampleFn) return;
+    genBtn.disabled = topicInput.value.trim().length === 0;
+  }
+
+  async function init(){
+    try {
+      if (window.claude && typeof window.claude.use === 'function'){
+        sampleFn = await window.claude.use('sample');
+      }
+    } catch (e) {
+      sampleFn = null;
+    }
+    if (!sampleFn){
+      noticeStart.hidden = false;
+      noticeStart.textContent = '이 기능은 Claude로 이 페이지를 열었을 때만 사용할 수 있어요. Claude 아티팩트 링크로 열어 주세요.';
+      genBtn.textContent = '사용할 수 없음';
+      genBtn.disabled = true;
+      return;
+    }
+    genBtn.textContent = '퀴즈 만들기';
+    refreshGenButton();
+  }
+  init();
+
+  // --- 프롬프트 ---
+  function buildPrompt(topic, difficulty){
+    return [
+      '당신은 한국어 퀴즈 출제자입니다. 아래 주제로 객관식 문제 5개를 만들어 주세요.',
+      '',
+      '주제: ' + topic,
+      '난이도: ' + difficulty + ' (쉬움/보통/어려움 중 하나이며, 문제의 개념 난이도와 보기 구성을 그 수준에 맞추세요)',
+      '',
+      '조건:',
+      '- 문제는 정확히 5개.',
+      '- 각 문제마다 보기는 4개이며 정답은 하나뿐입니다.',
+      '- 정답 근거를 담은 한 문장짜리 해설을 각 문제마다 포함하세요.',
+      '- 문제, 보기, 해설은 모두 자연스러운 한국어로 작성하세요.',
+      '- 문제마다 정답 위치를 다르게 섞어 특정 번호에 몰리지 않게 하세요.',
+      '- 이미지, 표, 외부 자료를 참고해야 풀 수 있는 문제는 내지 마세요.',
+      '',
+      '다음 형식의 JSON 배열만 응답하세요. 다른 설명이나 텍스트는 포함하지 마세요:',
+      '[{"question":"문제 내용","options":["보기1","보기2","보기3","보기4"],"answerIndex":0,"explanation":"한 문장 해설"}]'
+    ].join('\n');
+  }
+
+  function validateQuestions(data){
+    if (!Array.isArray(data) || data.length !== 5) return false;
+    for (var i = 0; i < data.length; i++){
+      var q = data[i];
+      if (!q || typeof q.question !== 'string' || !q.question.trim()) return false;
+      if (!Array.isArray(q.options) || q.options.length !== 4) return false;
+      for (var j = 0; j < 4; j++){ if (typeof q.options[j] !== 'string' || !q.options[j].trim()) return false; }
+      if (typeof q.answerIndex !== 'number' || q.answerIndex < 0 || q.answerIndex > 3) return false;
+      if (typeof q.explanation !== 'string' || !q.explanation.trim()) return false;
+    }
+    return true;
+  }
+
+  function errorCopy(code){
+    switch (code){
+      case 'not_granted':
+      case 'sampling_disabled':
+      case 'not_declared':
+      case 'capability_disabled':
+      case 'capability_removed':
+        return '이 페이지에서 AI 퀴즈 생성을 사용할 수 없어요. Claude 아티팩트 링크로 열어 주세요.';
+      case 'rate_limited':
+        return '요청이 많아 잠시 제한되었어요. 잠시 후 다시 시도해 주세요.';
+      case 'cancelled':
+        return null;
+      case 'invalid_json':
+        return '문제 형식을 만드는 데 실패했어요. 다시 시도해 주세요.';
+      default:
+        return '문제를 만드는 중 오류가 발생했어요. 다시 시도해 주세요.';
+    }
+  }
+
+  async function runGeneration(){
+    currentTopic = topicInput.value.trim();
+    loadingTopic.textContent = currentTopic + ' · ' + currentDifficulty;
+    showScreen('loading');
+    abortCtl = new AbortController();
+    try {
+      var data = await sampleFn.json(buildPrompt(currentTopic, currentDifficulty), {
+        modelTier: 'default',
+        cache: false,
+        signal: abortCtl.signal
+      });
+      if (!validateQuestions(data)) throw { code: 'invalid_json' };
+      questions = data;
+      answers = [];
+      currentIndex = 0;
+      score = 0;
+      showScreen('quiz');
+      renderQuestion();
+    } catch (e) {
+      if (e && e.code === 'cancelled'){
+        showScreen('start');
+        return;
+      }
+      var msg = errorCopy(e && e.code);
+      errorMessage.textContent = msg || '문제를 만드는 중 오류가 발생했어요. 다시 시도해 주세요.';
+      showScreen('error');
+    }
+  }
+
+  genBtn.addEventListener('click', runGeneration);
+  cancelBtn.addEventListener('click', function(){ if (abortCtl) abortCtl.abort(); });
+  errorRetryBtn.addEventListener('click', runGeneration);
+  errorBackBtn.addEventListener('click', function(){ showScreen('start'); });
+
+  // --- 퀴즈 화면 렌더 ---
+  function renderDots(){
+    dotsWrap.innerHTML = '';
+    for (var i = 0; i < questions.length; i++){
+      var d = document.createElement('span');
+      d.className = 'dot';
+      if (i < currentIndex) d.setAttribute('data-state', 'done');
+      else if (i === currentIndex) d.setAttribute('data-state', 'current');
+      dotsWrap.appendChild(d);
+    }
+  }
+
+  function renderQuestion(){
+    var q = questions[currentIndex];
+    progressCount.textContent = '문항 ' + (currentIndex + 1) + '/' + questions.length;
+    renderDots();
+    questionText.textContent = q.question;
+    optionsWrap.innerHTML = '';
+    explainBox.hidden = true;
+    nextBtn.hidden = true;
+
+    q.options.forEach(function(optText, i){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'option-btn';
+      btn.textContent = optText;
+      btn.addEventListener('click', function(){ selectOption(i); });
+      optionsWrap.appendChild(btn);
+    });
+  }
+
+  function selectOption(i){
+    var q = questions[currentIndex];
+    var optionBtns = optionsWrap.querySelectorAll('.option-btn');
+    Array.prototype.forEach.call(optionBtns, function(b){ b.disabled = true; });
+
+    var correct = (i === q.answerIndex);
+    if (correct) score++;
+    answers.push({ question: q.question, explanation: q.explanation, correct: correct });
+
+    optionBtns[q.answerIndex].setAttribute('data-mark', 'correct');
+    if (!correct) optionBtns[i].setAttribute('data-mark', 'wrong');
+
+    explainBox.hidden = false;
+    explainTag.textContent = correct ? '정답' : '오답';
+    explainTag.setAttribute('data-mark', correct ? 'correct' : 'wrong');
+    explainText.textContent = q.explanation;
+
+    nextBtn.hidden = false;
+    nextBtn.textContent = (currentIndex === questions.length - 1) ? '결과 보기' : '다음 문제';
+  }
+
+  nextBtn.addEventListener('click', function(){
+    currentIndex++;
+    if (currentIndex < questions.length) renderQuestion();
+    else showResult();
+  });
+
+  // --- 결과 화면 ---
+  function scoreLabelFor(s, total){
+    if (s === total) return '완벽해요!';
+    if (s >= total - 1) return '훌륭해요!';
+    if (s >= total / 2) return '좋아요, 조금만 더!';
+    return '다시 도전해 볼까요?';
+  }
+
+  function showResult(){
+    resultTopic.textContent = currentTopic + ' · ' + currentDifficulty;
+    scoreNum.textContent = score;
+    scoreLabel.textContent = scoreLabelFor(score, questions.length);
+
+    reviewList.innerHTML = '';
+    answers.forEach(function(a, idx){
+      var item = document.createElement('div');
+      item.className = 'review-item';
+
+      var head = document.createElement('div');
+      head.className = 'review-head';
+      var mark = document.createElement('span');
+      mark.className = 'review-mark';
+      mark.setAttribute('data-mark', a.correct ? 'correct' : 'wrong');
+      mark.textContent = a.correct ? '✓' : '✗';
+      var qEl = document.createElement('span');
+      qEl.className = 'review-q';
+      qEl.textContent = (idx + 1) + '. ' + a.question;
+      head.appendChild(mark);
+      head.appendChild(qEl);
+
+      var exp = document.createElement('p');
+      exp.className = 'review-explain';
+      exp.textContent = a.explanation;
+
+      item.appendChild(head);
+      item.appendChild(exp);
+      reviewList.appendChild(item);
+    });
+
+    showScreen('result');
+  }
+
+  retryBtn.addEventListener('click', runGeneration);
+  newTopicBtn.addEventListener('click', function(){
+    showScreen('start');
+  });
+
+})();
+</script>
+</body>
+</html>
